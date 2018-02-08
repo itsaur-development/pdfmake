@@ -228,20 +228,38 @@ DocMeasure.prototype.measureToc = function (node) {
 		var item = node.toc._items[i];
 		var lineStyle = node.toc._items[i].tocStyle || textStyle;
 		var lineMargin = node.toc._items[i].tocMargin || textMargin;
+		var text = item.text.substring(0);
+
+		var styleContextStack = new StyleContextStack(null, this.styleStack.styleDictionary[lineStyle]);
+		var sizeOfText = this.textTools.sizeOfString(text, styleContextStack);
+		var sizeOfNumber = this.textTools.sizeOfString('000', styleContextStack);
+		var sizeOfDot = this.textTools.sizeOfString('.', styleContextStack);
+		var currentSizeOfText = sizeOfText.width;
+		while (currentSizeOfText <= 450) {
+			text = text + ".";
+			currentSizeOfText = currentSizeOfText + sizeOfDot.width;
+		}
+
 		body.push([
-			{text: item.text, alignment: 'left', style: lineStyle, margin: lineMargin},
-			{text: '00000', alignment: 'right', _tocItemRef: item, style: numberStyle, margin: [0, lineMargin[1], 0, lineMargin[3]]}
+			{text: text, alignment: 'left', style: lineStyle, margin: lineMargin},
+			{
+				text: '000',
+				alignment: 'right',
+				_tocItemRef: item,
+				style: lineStyle,
+				margin: [0,5,0,5]
+			}
 		]);
 	}
-
 
 	node.toc._table = {
 		table: {
 			dontBreakRows: true,
 			widths: ['*', 'auto'],
+			headerRows: 0,
 			body: body
 		},
-		layout: 'noBorders'
+	  layout: 'noBorders'
 	};
 
 	node.toc._table = this.measureNode(node.toc._table);
@@ -275,13 +293,13 @@ DocMeasure.prototype.buildUnorderedMarker = function (styleStack, gapSize, type)
 		var radius = gapSize.fontSize / 6;
 		return {
 			canvas: [{
-					x: radius,
-					y: (gapSize.height / gapSize.lineHeight) + gapSize.descender - gapSize.fontSize / 3,
-					r1: radius,
-					r2: radius,
-					type: 'ellipse',
-					color: color
-				}]
+				x: radius,
+				y: (gapSize.height / gapSize.lineHeight) + gapSize.descender - gapSize.fontSize / 3,
+				r1: radius,
+				r2: radius,
+				type: 'ellipse',
+				color: color
+			}]
 		};
 	}
 
@@ -290,13 +308,13 @@ DocMeasure.prototype.buildUnorderedMarker = function (styleStack, gapSize, type)
 		var size = gapSize.fontSize / 3;
 		return {
 			canvas: [{
-					x: 0,
-					y: (gapSize.height / gapSize.lineHeight) + gapSize.descender - (gapSize.fontSize / 3) - (size / 2),
-					h: size,
-					w: size,
-					type: 'rect',
-					color: color
-				}]
+				x: 0,
+				y: (gapSize.height / gapSize.lineHeight) + gapSize.descender - (gapSize.fontSize / 3) - (size / 2),
+				h: size,
+				w: size,
+				type: 'rect',
+				color: color
+			}]
 		};
 	}
 
@@ -305,13 +323,13 @@ DocMeasure.prototype.buildUnorderedMarker = function (styleStack, gapSize, type)
 		var radius = gapSize.fontSize / 6;
 		return {
 			canvas: [{
-					x: radius,
-					y: (gapSize.height / gapSize.lineHeight) + gapSize.descender - gapSize.fontSize / 3,
-					r1: radius,
-					r2: radius,
-					type: 'ellipse',
-					lineColor: color
-				}]
+				x: radius,
+				y: (gapSize.height / gapSize.lineHeight) + gapSize.descender - gapSize.fontSize / 3,
+				r1: radius,
+				r2: radius,
+				type: 'ellipse',
+				lineColor: color
+			}]
 		};
 	}
 
@@ -361,7 +379,8 @@ DocMeasure.prototype.buildOrderedMarker = function (counter, styleStack, type, s
 			return counter.toString();
 		}
 		var num = counter;
-		var lookup = {M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1}, roman = '', i;
+		var lookup = {M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1},
+			roman = '', i;
 		for (i in lookup) {
 			while (num >= lookup[i]) {
 				roman += i;
